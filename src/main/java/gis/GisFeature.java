@@ -37,4 +37,36 @@ public class GisFeature {
         this.createLat = createLat;
         this.createLon = createLon;
     }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public String getCreateLat() {
+        return createLat;
+    }
+
+    public String getCreateLon() {
+        return createLon;
+    }
+
+    public String getGeometryType() {
+        return geometryType;
+    }
+
+    public List<GISCoordinate> getCoordinates() {
+        return coordinates;
+    }
+
+    public Properties getProperties() {
+        return properties;
+    }
 }

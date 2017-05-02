@@ -1,15 +1,9 @@
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import constants.Paths;
-import gis.GISCoordinate;
+import gis.FeatureCollector;
 import gis.GisFeature;
-import gis.Properties;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import util.GisFilesFinder;
-import util.GisZipReader;
-import util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,108 +19,84 @@ public class MergeGis {
 
     public static void main(String args[]) throws IOException, FactoryException, TransformException {
         List<File> gisFiles = new GisFilesFinder(Paths.WORKING_DIR_TEMP).getGisFiles();
-        List<GisFeature> gisFeatures = getAllGisFeature(gisFiles);
+
+        FeatureCollector featureCollector = new FeatureCollector(gisFiles);
+        List<GisFeature> gisFeatures = featureCollector.getAllGisFeature();
+        featureCollector.displayAllFeatures(gisFeatures);
+
+        mergeGisFeatures(gisFeatures);
     }
 
-    private static List<GisFeature> getAllGisFeature(List<File> gisFiles) throws IOException, FactoryException, TransformException {
-        List<GisFeature> gisFeatures = new ArrayList<GisFeature>();
+    private static void mergeGisFeatures(List<GisFeature> gisFeatures) {
+        List<List<GisFeature>> mergeList = new ArrayList<List<GisFeature>>();
 
-        for(File file:gisFiles) {
-            String fileName = file.getName().substring(0, file.getName().indexOf('.'));
+        matchFeatures(mergeList, gisFeatures);
+        
+    }
 
-            String source = getSourceFromFileName(fileName);
-            String timestamp = getTimestampFromFileName(fileName);
-            String destination = getDestinationFromFileName(fileName);
-            String createLat = getLatFromFileName(fileName);
-            String createLon = getLonFromFileName(fileName);
+    /**
+     * Find out which features represent the same data in out gisFeatures list
+     * @param mergeList
+     * @param gisFeatures
+     */
+    private static void matchFeatures(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
+        matchMetaData(mergeList, gisFeatures);
+        matchGeometries(mergeList, gisFeatures);
+    }
 
-            JsonObject geoJson = GisZipReader.getGeoJsonFromZip(file);
-            JsonArray features = geoJson.getAsJsonArray("features");
+    private static void matchGeometries(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
+    }
 
-            for(JsonElement feature:features) {
+    /**
+     * Group features which represent the same data on basis of their meta data 
+     * @param mergeList
+     * @param gisFeatures
+     */
+    private static void matchMetaData(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
+        boolean[] isGrouped = new boolean[gisFeatures.size()];
+        for(int i = 0;i < gisFeatures.size(); i++) {
+            if(isGrouped[i]) {
+                continue;
+            }
 
-                if(!feature.getAsJsonObject().get("type").getAsString().equals("Feature")) {
-                    continue;
+            List<GisFeature> group = null;
+            for(int j =  i + 1; j < gisFeatures.size(); j++) {
+                if(metaDataCheck(gisFeatures.get(i), gisFeatures.get(j))) {
+                    // add to list
+                    if(group == null) {
+                        group = new ArrayList<GisFeature>();
+                    }
+
+                    group.add(gisFeatures.get(j));
+                    isGrouped[j] = true;
                 }
-
-                // get the geometry
-                JsonObject geometry = feature.getAsJsonObject().get("geometry").getAsJsonObject();
-                String geometryType = geometry.get("type").getAsString();
-
-                // get the coordinates
-                String coordinates = geometry.get("coordinates").toString();
-                String[] c = coordinates.split(",");
-                for(int i = 0; i < c.length; ++i) {
-                    c[i] = Util.trimString(c[i], '[');
-                    c[i] = Util.trimString(c[i], ']');
-                }
-
-                List<GISCoordinate> list = new ArrayList<GISCoordinate>();
-
-                for(int i=0; i < c.length; i += 2) {
-                    GISCoordinate coordinate = new GISCoordinate(coordinates);
-                    coordinate.setCoordinateEPSG3857(Double.parseDouble(c[i]), Double.parseDouble(c[i + 1]));
-//                    coordinate.convertEPSG3857toEPSG4326();
-                    list.add(coordinate);
-                }
-
-                // get the properties
-                JsonObject property = feature.getAsJsonObject().get("properties").getAsJsonObject();
-                int fid = property.get("FID").getAsInt();
-                String text = property.get("FID").getAsString();
-                Properties properties = new Properties(fid, text);
-
-                GisFeature gisFeature = new GisFeature(source, timestamp, destination, createLat, createLon,
-                        geometryType, list, properties);
-                gisFeatures.add(gisFeature);
+            }
+            if(group != null) {
+                group.add(gisFeatures.get(i));
+                isGrouped[i] = true;
             }
         }
-
-        return gisFeatures;
     }
 
-    private static String getLonFromFileName(String fileName) {
-        try {
-            return fileName.split("_")[6];
-        } catch (Exception e) {
-            System.out.println("Longitude not in Filename " + fileName);
-            return null;
+    /**
+     * Check if meta data of two feature suggest that they represent the same data
+     * @param feature1
+     * @param feature2
+     * @return true if both features represent same data, false otherwise
+     */
+    private static boolean metaDataCheck(GisFeature feature1, GisFeature feature2) {
+        // check for properties of features
+        if(!feature1.getProperties().getTEXT().equals(feature2.getProperties().getTEXT())) {
+            return false;
         }
-    }
+        if(feature1.getProperties().getFID() != feature2.getProperties().getFID()) {
+            return false;
+        }
 
-    private static String getLatFromFileName(String fileName) {
-        try {
-            return fileName.split("_")[5];
-        } catch (Exception e) {
-            System.out.println("Latitude not in Filename " + fileName);
-            return null;
+        // check for geometry types of features
+        if(!feature1.getGeometryType().equals(feature2.getGeometryType())) {
+            return false;
         }
-    }
-
-    private static String getDestinationFromFileName(String fileName) {
-        try {
-            return fileName.split("_")[4];
-        } catch (Exception e) {
-            System.out.println("Destination not in Filename " + fileName);
-            return null;
-        }
-    }
-
-    private static String getTimestampFromFileName(String fileName) {
-        try {
-            return fileName.split("_")[7];
-        } catch (Exception e) {
-            System.out.println("Timestamp not in Filename " + fileName);
-            return null;
-        }
-    }
-
-    private static String getSourceFromFileName(String fileName) {
-        try {
-            return fileName.split("_")[3];
-        } catch (Exception e) {
-            System.out.println("Source not in Filename " + fileName);
-            return null;
-        }
+        return true;
     }
 }

@@ -12,4 +12,12 @@ public class Properties {
         this.FID = FID;
         this.TEXT = TEXT;
     }
+
+    public int getFID() {
+        return FID;
+    }
+
+    public String getTEXT() {
+        return TEXT;
+    }
 }
