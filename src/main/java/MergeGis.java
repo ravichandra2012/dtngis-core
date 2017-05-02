@@ -2,11 +2,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import constants.Paths;
-import gis.Coordinate;
+import gis.GISCoordinate;
 import gis.GisFeature;
 import gis.Properties;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 import util.GisFilesFinder;
 import util.GisZipReader;
+import util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,12 +23,12 @@ import java.util.List;
  */
 public class MergeGis {
 
-    public static void main(String args[])throws IOException {
+    public static void main(String args[]) throws IOException, FactoryException, TransformException {
         List<File> gisFiles = new GisFilesFinder(Paths.WORKING_DIR_TEMP).getGisFiles();
         List<GisFeature> gisFeatures = getAllGisFeature(gisFiles);
     }
 
-    private static List<GisFeature> getAllGisFeature(List<File> gisFiles) throws IOException {
+    private static List<GisFeature> getAllGisFeature(List<File> gisFiles) throws IOException, FactoryException, TransformException {
         List<GisFeature> gisFeatures = new ArrayList<GisFeature>();
 
         for(File file:gisFiles) {
@@ -52,9 +55,20 @@ public class MergeGis {
 
                 // get the coordinates
                 String coordinates = geometry.get("coordinates").toString();
-                Coordinate coordinate = new Coordinate(coordinates);
-                List<Coordinate> list = new ArrayList<Coordinate>();
-                list.add(coordinate);
+                String[] c = coordinates.split(",");
+                for(int i = 0; i < c.length; ++i) {
+                    c[i] = Util.trimString(c[i], '[');
+                    c[i] = Util.trimString(c[i], ']');
+                }
+
+                List<GISCoordinate> list = new ArrayList<GISCoordinate>();
+
+                for(int i=0; i < c.length; i += 2) {
+                    GISCoordinate coordinate = new GISCoordinate(coordinates);
+                    coordinate.setCoordinateEPSG3857(Double.parseDouble(c[i]), Double.parseDouble(c[i + 1]));
+//                    coordinate.convertEPSG3857toEPSG4326();
+                    list.add(coordinate);
+                }
 
                 // get the properties
                 JsonObject property = feature.getAsJsonObject().get("properties").getAsJsonObject();

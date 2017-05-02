@@ -14,11 +14,11 @@ public class GisFeature {
     private String createLon;
 
     private String geometryType;
-    private List<Coordinate> coordinates;
+    private List<GISCoordinate> coordinates;
     private Properties properties;
 
     public GisFeature(String source, String timestamp, String destination, String createLat, String createLon,
-                      String geometryType, List<Coordinate> coordinates, Properties properties) {
+                      String geometryType, List<GISCoordinate> coordinates, Properties properties) {
         this.source = source;
         this.timestamp = timestamp;
         this.destination = destination;
