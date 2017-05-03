@@ -27,6 +27,11 @@ public class GISCoordinate {
         this.coordinate = coordinate;
     }
 
+    public GISCoordinate(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
     public void setCoordinateEPSG3857(double x, double y) {
         this.x = x;
         this.y = y;
@@ -44,5 +49,13 @@ public class GISCoordinate {
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         Point point = geometryFactory.createPoint(new Coordinate(x, y));
         Point targetPoint = (Point) JTS.transform(point, transform);
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
     }
 }
