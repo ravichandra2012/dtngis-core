@@ -88,7 +88,7 @@ public class GisUtil {
         Coordinate[] coordinates = finalPoint.getCoordinates();
         List<GISCoordinate> gisCoordinates = new ArrayList<GISCoordinate>();
         for(Coordinate coordinate:coordinates) {
-            gisCoordinates.add(new GISCoordinate(coordinate.x, coordinate.y));
+            gisCoordinates.add(new GISCoordinate(coordinate.x, coordinate.y, "EPSG:4326"));
         }
 
         return new GisFeature(source, timestamp, destination, createLat, createLon,

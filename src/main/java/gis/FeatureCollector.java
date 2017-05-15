@@ -60,16 +60,16 @@ public class FeatureCollector {
                 List<GISCoordinate> list = new ArrayList<GISCoordinate>();
 
                 for(int i=0; i < c.length; i += 2) {
-                    GISCoordinate coordinate = new GISCoordinate(coordinates);
-                    coordinate.setCoordinateEPSG3857(Double.parseDouble(c[i]), Double.parseDouble(c[i + 1]));
-//                    coordinate.convertEPSG3857toEPSG4326();
+                    GISCoordinate coordinate = new GISCoordinate(Double.parseDouble(c[i]), Double.parseDouble(c[i + 1]),
+                            "EPSG:3857");
+                    coordinate.convertEPSG3857toEPSG4326();
                     list.add(coordinate);
                 }
 
                 // get the properties
                 JsonObject property = feature.getAsJsonObject().get("properties").getAsJsonObject();
                 int fid = property.get("FID").getAsInt();
-                String text = property.get("FID").getAsString();
+                String text = property.get("TEXT").getAsString();
                 Properties properties = new Properties(fid, text);
 
                 GisFeature gisFeature = new GisFeature(source, timestamp, destination, createLat, createLon,
@@ -117,6 +117,11 @@ public class FeatureCollector {
         }
     }
 
+    /**
+     * Collect source of GIS file from file name
+     * @param fileName
+     * @return the source phone number
+     */
     private String getSourceFromFileName(String fileName) {
         try {
             return fileName.split("_")[3];
