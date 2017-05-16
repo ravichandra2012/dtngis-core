@@ -136,6 +136,11 @@ public class FeatureCollector {
             System.out.println(feature.getSource() + "|" + feature.getTimestamp() + "|" + feature.getDestination() +
                     "|" + feature.getCreateLat() + "|" + feature.getCreateLon() + "|" +
                     feature.getGeometryType() + "|" + feature.getProperties().getFID() + "|" + feature.getProperties().getTEXT());
+            System.out.print("Coordinates : ");
+            for (GISCoordinate coordinate:feature.getCoordinates()) {
+                System.out.print(coordinate.getX() + "," + coordinate.getY() + " ; ");
+            }
+            System.out.println();
         }
     }
 }

@@ -5,6 +5,7 @@ import constants.Constants;
 import gis.GISCoordinate;
 import gis.GisFeature;
 import gis.Properties;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class GisUtil {
      * @return
      */
     private static Point createPoint(GisFeature feature) {
-        GeometryFactory geometryFactory = new GeometryFactory();
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
 
         Coordinate coordinate = new Coordinate(feature.getCoordinates().get(0).getX(),
                 feature.getCoordinates().get(0).getY());
@@ -36,13 +37,14 @@ public class GisUtil {
      * @return
      */
     private static LineString createLineString(GisFeature feature) {
-        GeometryFactory geometryFactory = new GeometryFactory();
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
 
         List<GISCoordinate> featureCoordinates = feature.getCoordinates();
         Coordinate[] coordinates = new Coordinate[featureCoordinates.size()];
         int i = 0;
         for(GISCoordinate featureCoordinate:featureCoordinates) {
             coordinates[i] = new Coordinate(featureCoordinate.getX(), featureCoordinate.getY());
+            i++;
         }
 
         LineString lineString = geometryFactory.createLineString(coordinates);
@@ -56,17 +58,17 @@ public class GisUtil {
      * @return
      */
     private static Polygon createPolygon(GisFeature feature) {
-        GeometryFactory geometryFactory = new GeometryFactory();
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
 
         List<GISCoordinate> featureCoordinates = feature.getCoordinates();
         Coordinate[] coordinates = new Coordinate[featureCoordinates.size()];
         int i = 0;
         for(GISCoordinate featureCoordinate:featureCoordinates) {
             coordinates[i] = new Coordinate(featureCoordinate.getX(), featureCoordinate.getY());
+            i++;
         }
 
         Polygon polygon = geometryFactory.createPolygon(coordinates);
-
         return polygon;
     }
 

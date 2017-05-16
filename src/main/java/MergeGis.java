@@ -4,6 +4,7 @@ import gis.GisFeature;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import util.GisFilesFinder;
+import util.GisUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,14 +25,26 @@ public class MergeGis {
         List<GisFeature> gisFeatures = featureCollector.getAllGisFeature();
         featureCollector.displayAllFeatures(gisFeatures);
 
-        mergeGisFeatures(gisFeatures);
+        gisFeatures = mergeGisFeatures(gisFeatures);
+        featureCollector.displayAllFeatures(gisFeatures);
     }
 
-    private static void mergeGisFeatures(List<GisFeature> gisFeatures) {
+    private static List<GisFeature> mergeGisFeatures(List<GisFeature> gisFeatures) {
         List<List<GisFeature>> mergeList = new ArrayList<List<GisFeature>>();
 
         matchFeatures(mergeList, gisFeatures);
-        
+        List<GisFeature> finalFeatures = new ArrayList<GisFeature>();
+
+        for(int i = 0; i < mergeList.size(); i++) {
+            for(int j = 1; j < mergeList.get(i).size(); j++) {
+                GisFeature feature = GisUtil.union(mergeList.get(i).get(0), mergeList.get(i).get(j));
+                mergeList.get(i).remove(0);
+                mergeList.get(i).add(0, feature);
+            }
+            finalFeatures.add(mergeList.get(i).get(0));
+        }
+
+        return finalFeatures;
     }
 
     /**
@@ -42,6 +55,7 @@ public class MergeGis {
     private static void matchFeatures(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
         matchMetaData(mergeList, gisFeatures);
         matchGeometries(mergeList, gisFeatures);
+        System.out.println("Size is " + mergeList.size());
     }
 
     private static void matchGeometries(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
@@ -74,6 +88,7 @@ public class MergeGis {
             if(group != null) {
                 group.add(gisFeatures.get(i));
                 isGrouped[i] = true;
+                mergeList.add(group);
             }
         }
     }
@@ -85,6 +100,10 @@ public class MergeGis {
      * @return true if both features represent same data, false otherwise
      */
     private static boolean metaDataCheck(GisFeature feature1, GisFeature feature2) {
+        //check for different sources
+        if(feature1.getSource().equals(feature2.getSource())) {
+            return false;
+        }
         // check for properties of features
         if(!feature1.getProperties().getTEXT().equals(feature2.getProperties().getTEXT())) {
             return false;

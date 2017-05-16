@@ -5,6 +5,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
+import constants.Constants;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
@@ -25,9 +26,9 @@ public class GISCoordinate {
 
     public GISCoordinate(double x, double y, String coordinateSystem) {
         this.coordinateSystem = coordinateSystem;
-        if (this.coordinateSystem.equals("EPSG:3857")) {
+        if (this.coordinateSystem.equals(Constants.COORDINATE_SYSTEM_EPSG3857)) {
             setCoordinateEPSG3857(x, y);
-        } else if (this.coordinateSystem.equals("EPSG:4326")) {
+        } else if (this.coordinateSystem.equals(Constants.COORDINATE_SYSTEM_EPSG4326)) {
             setCoordinateEPSG4326(x, y);
         }
     }
@@ -43,15 +44,23 @@ public class GISCoordinate {
     }
 
     public void convertEPSG3857toEPSG4326() throws FactoryException, TransformException {
-        CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:3857");
-        CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:4326");
+        CoordinateReferenceSystem sourceCRS = CRS.decode(Constants.COORDINATE_SYSTEM_EPSG3857);
+        CoordinateReferenceSystem targetCRS = CRS.decode(Constants.COORDINATE_SYSTEM_EPSG4326);
         MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS, false);
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         Point point = geometryFactory.createPoint(new Coordinate(x, y));
         Point targetPoint = (Point) JTS.transform(point, transform);
-        System.out.println("x was " + x + " becomes " + targetPoint.getX());
-        System.out.println("x was " + y + " becomes " + targetPoint.getY());
         setCoordinateEPSG4326(targetPoint.getX(), targetPoint.getY());
+    }
+
+    public void convertEPSG4326toEPSG3857() throws FactoryException, TransformException {
+        CoordinateReferenceSystem sourceCRS = CRS.decode(Constants.COORDINATE_SYSTEM_EPSG4326);
+        CoordinateReferenceSystem targetCRS = CRS.decode(Constants.COORDINATE_SYSTEM_EPSG3857);
+        MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS, false);
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        Point point = geometryFactory.createPoint(new Coordinate(x, y));
+        Point targetPoint = (Point) JTS.transform(point, transform);
+        setCoordinateEPSG3857(targetPoint.getX(), targetPoint.getY());
     }
 
     public double getX() {
