@@ -10,7 +10,9 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
 /**
  * Contains several utility methods related to GIS features
  * Created by arka on 2/5/17.
@@ -217,6 +219,13 @@ public class GisUtil {
      * @param path
      */
     public static void writeToGeoJSON(JsonObject geoJson, String path, String fileName) {
+        
+        try (FileWriter file = new FileWriter(new File(path,fileName+".json"))) {
+             Gson gson = new GsonBuilder().create();
+             gson.toJson(geoJson,file);
+             } catch (IOException e) {
+                  e.printStackTrace();
+             }
     }
 
     /**
