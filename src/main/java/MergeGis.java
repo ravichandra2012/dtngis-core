@@ -1,3 +1,4 @@
+import constants.Constants;
 import constants.Paths;
 import gis.FeatureCollector;
 import gis.GisFeature;
@@ -17,6 +18,7 @@ import java.util.List;
  * Created by arka on 17/4/17.
  */
 public class MergeGis {
+    private static final String TAG = "MergeGis ";
 
     public static void main(String args[]) throws IOException, FactoryException, TransformException {
         List<File> gisFiles = new GisFilesFinder(Paths.WORKING_DIR_TEMP).getGisFiles();
@@ -27,6 +29,10 @@ public class MergeGis {
 
         gisFeatures = mergeGisFeatures(gisFeatures);
         featureCollector.displayAllFeatures(gisFeatures);
+
+        // add method to group related gis features.
+        GisUtil.createGeoJSON(gisFeatures);
+//        GisUtil.writeToGeoJSON(, Paths.WORKING_DIR_TEMP);
     }
 
     private static List<GisFeature> mergeGisFeatures(List<GisFeature> gisFeatures) {
@@ -55,7 +61,7 @@ public class MergeGis {
     private static void matchFeatures(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {
         matchMetaData(mergeList, gisFeatures);
         matchGeometries(mergeList, gisFeatures);
-        System.out.println("Size is " + mergeList.size());
+        System.out.println(Constants.MSG_DEBUG + TAG + "Size is " + mergeList.size());
     }
 
     private static void matchGeometries(List<List<GisFeature>> mergeList, List<GisFeature> gisFeatures) {

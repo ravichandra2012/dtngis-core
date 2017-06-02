@@ -1,5 +1,9 @@
 package util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.vividsolutions.jts.geom.*;
 import constants.Constants;
 import gis.GISCoordinate;
@@ -208,5 +212,46 @@ public class GisUtil {
      */
     public static GisFeature bufferFeature(GisFeature feature1) {
         return null;
+    }
+
+    /**
+     * Write JSON object to a GeoJSON file in the specified path
+     * @param geoJson
+     * @param path
+     */
+    public static void writeToGeoJSON(JsonObject geoJson, String path, String fileName) {
+    }
+
+    /**
+     * Create a geojson
+     * @param gisFeatures
+     */
+    public static void createGeoJSON(List<GisFeature> gisFeatures) {
+        JsonParser jsonParser = new JsonParser();
+        JsonObject  jsonObject = jsonParser.parse(Constants.GEOJSON_EPSG4326).getAsJsonObject();
+
+        JsonObject featuresJson =  jsonParser.parse(Constants.GEOJSON_FEATURE).getAsJsonObject();
+        JsonArray featuresArray = new JsonArray();
+
+        for(GisFeature gisFeature:gisFeatures) {
+            JsonObject feature = featuresJson;
+
+            JsonObject properties =  feature.get("properties").getAsJsonObject();
+            properties.addProperty("FID", gisFeature.getProperties().getFID());
+            properties.addProperty("TEXT", gisFeature.getProperties().getTEXT());
+
+            feature.addProperty("properties", new Gson().toJson(properties));
+
+            JsonObject geometry = feature.get("geometry").getAsJsonObject();
+            geometry.addProperty("type", gisFeature.getGeometryType());
+//            JsonObject coordinates = geometry.get("coordinates").getAsJsonObject();
+
+            System.out.println(geometry.get("coordinates"));
+            System.out.println(feature);
+        }
+
+
+
+        System.out.print(featuresJson);
     }
 }
