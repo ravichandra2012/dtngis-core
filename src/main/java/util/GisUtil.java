@@ -1,9 +1,6 @@
 package util;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.vividsolutions.jts.geom.*;
 import constants.Constants;
 import gis.GISCoordinate;
@@ -226,16 +223,14 @@ public class GisUtil {
      * Create a geojson
      * @param gisFeatures
      */
-    public static void createGeoJSON(List<GisFeature> gisFeatures) {
+    public static JsonObject createGeoJSON(List<GisFeature> gisFeatures) {
         JsonParser jsonParser = new JsonParser();
         JsonObject  jsonObject = jsonParser.parse(Constants.GEOJSON_EPSG4326).getAsJsonObject();
 
-        JsonObject featuresJson =  jsonParser.parse(Constants.GEOJSON_FEATURE).getAsJsonObject();
+        JsonObject feature =  jsonParser.parse(Constants.GEOJSON_FEATURE).getAsJsonObject();
         JsonArray featuresArray = new JsonArray();
 
         for(GisFeature gisFeature:gisFeatures) {
-            JsonObject feature = featuresJson;
-
             JsonObject properties =  feature.get("properties").getAsJsonObject();
             properties.addProperty("FID", gisFeature.getProperties().getFID());
             properties.addProperty("TEXT", gisFeature.getProperties().getTEXT());
@@ -244,14 +239,21 @@ public class GisUtil {
 
             JsonObject geometry = feature.get("geometry").getAsJsonObject();
             geometry.addProperty("type", gisFeature.getGeometryType());
-//            JsonObject coordinates = geometry.get("coordinates").getAsJsonObject();
 
-            System.out.println(geometry.get("coordinates"));
-            System.out.println(feature);
+            JsonArray coordinateArray = new JsonArray();
+            for(GISCoordinate coordinate:gisFeature.getCoordinates()) {
+                JsonArray coordinatePair = new JsonArray();
+                coordinatePair.add(new JsonPrimitive(coordinate.getX()));
+                coordinatePair.add(new JsonPrimitive(coordinate.getY()));
+                coordinateArray.add(coordinatePair);
+            }
+            geometry.add("coordinates", coordinateArray);
+            feature.add("geometry", geometry);
+            featuresArray.add(feature);
         }
 
-
-
-        System.out.print(featuresJson);
+        jsonObject.add("features", featuresArray);
+        System.out.print(jsonObject);
+        return jsonObject;
     }
 }
