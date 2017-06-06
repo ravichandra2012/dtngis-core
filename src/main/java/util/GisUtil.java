@@ -1,5 +1,6 @@
 package util;
 
+import com.google.gson.*;
 import com.vividsolutions.jts.geom.*;
 import constants.Constants;
 import gis.GISCoordinate;
@@ -9,7 +10,9 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
 /**
  * Contains several utility methods related to GIS features
  * Created by arka on 2/5/17.
@@ -208,5 +211,58 @@ public class GisUtil {
      */
     public static GisFeature bufferFeature(GisFeature feature1) {
         return null;
+    }
+
+    /**
+     * Write JSON object to a GeoJSON file in the specified path
+     * @param geoJson
+     * @param path
+     */
+    public static void writeToGeoJSON(JsonObject geoJson, String path, String fileName) {
+        
+        try (FileWriter file = new FileWriter(new File(path,fileName+".json"))) {
+             Gson gson = new GsonBuilder().create();
+             gson.toJson(geoJson,file);
+             } catch (IOException e) {
+                  e.printStackTrace();
+             }
+    }
+
+    /**
+     * Create a geojson
+     * @param gisFeatures
+     */
+    public static JsonObject createGeoJSON(List<GisFeature> gisFeatures) {
+        JsonParser jsonParser = new JsonParser();
+        JsonObject  jsonObject = jsonParser.parse(Constants.GEOJSON_EPSG4326).getAsJsonObject();
+
+        JsonObject feature =  jsonParser.parse(Constants.GEOJSON_FEATURE).getAsJsonObject();
+        JsonArray featuresArray = new JsonArray();
+
+        for(GisFeature gisFeature:gisFeatures) {
+            JsonObject properties =  feature.get("properties").getAsJsonObject();
+            properties.addProperty("FID", gisFeature.getProperties().getFID());
+            properties.addProperty("TEXT", gisFeature.getProperties().getTEXT());
+
+            feature.addProperty("properties", new Gson().toJson(properties));
+
+            JsonObject geometry = feature.get("geometry").getAsJsonObject();
+            geometry.addProperty("type", gisFeature.getGeometryType());
+
+            JsonArray coordinateArray = new JsonArray();
+            for(GISCoordinate coordinate:gisFeature.getCoordinates()) {
+                JsonArray coordinatePair = new JsonArray();
+                coordinatePair.add(new JsonPrimitive(coordinate.getX()));
+                coordinatePair.add(new JsonPrimitive(coordinate.getY()));
+                coordinateArray.add(coordinatePair);
+            }
+            geometry.add("coordinates", coordinateArray);
+            feature.add("geometry", geometry);
+            featuresArray.add(feature);
+        }
+
+        jsonObject.add("features", featuresArray);
+        System.out.print(jsonObject);
+        return jsonObject;
     }
 }

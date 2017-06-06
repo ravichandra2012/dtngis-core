@@ -3,6 +3,8 @@ package gis;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.sun.deploy.util.SyncAccess;
+import constants.Constants;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import util.GisZipReader;
@@ -18,6 +20,7 @@ import java.util.List;
  * Created by arka on 2/5/17.
  */
 public class FeatureCollector {
+    private final String TAG = "FeatureCollector ";
     private List<File> gisFiles;
 
     public FeatureCollector(List<File> gisFiles) {
@@ -60,9 +63,11 @@ public class FeatureCollector {
                 List<GISCoordinate> list = new ArrayList<GISCoordinate>();
 
                 for(int i=0; i < c.length; i += 2) {
+                    System.out.print(Constants.MSG_DEBUG + TAG + c[i] + "," + c[i+1] + " ===> ");
                     GISCoordinate coordinate = new GISCoordinate(Double.parseDouble(c[i]), Double.parseDouble(c[i + 1]),
                             "EPSG:3857");
                     coordinate.convertEPSG3857toEPSG4326();
+                    System.out.println(coordinate.getX() + "," + coordinate.getY());
                     list.add(coordinate);
                 }
 
@@ -85,7 +90,7 @@ public class FeatureCollector {
         try {
             return fileName.split("_")[6];
         } catch (Exception e) {
-            System.out.println("Longitude not in Filename " + fileName);
+            System.out.println(Constants.MSG_DEBUG + TAG + "Longitude not in Filename " + fileName);
             return null;
         }
     }
@@ -94,7 +99,7 @@ public class FeatureCollector {
         try {
             return fileName.split("_")[5];
         } catch (Exception e) {
-            System.out.println("Latitude not in Filename " + fileName);
+            System.out.println(Constants.MSG_DEBUG + TAG + "Latitude not in Filename " + fileName);
             return null;
         }
     }
@@ -103,7 +108,7 @@ public class FeatureCollector {
         try {
             return fileName.split("_")[4];
         } catch (Exception e) {
-            System.out.println("Destination not in Filename " + fileName);
+            System.out.println(Constants.MSG_DEBUG + TAG + "Destination not in Filename " + fileName);
             return null;
         }
     }
@@ -112,7 +117,7 @@ public class FeatureCollector {
         try {
             return fileName.split("_")[7];
         } catch (Exception e) {
-            System.out.println("Timestamp not in Filename " + fileName);
+            System.out.println(Constants.MSG_DEBUG + TAG + "Timestamp not in Filename " + fileName);
             return null;
         }
     }
@@ -126,17 +131,17 @@ public class FeatureCollector {
         try {
             return fileName.split("_")[3];
         } catch (Exception e) {
-            System.out.println("Source not in Filename " + fileName);
+            System.out.println(Constants.MSG_DEBUG + TAG + "Source not in Filename " + fileName);
             return null;
         }
     }
 
     public void displayAllFeatures(List<GisFeature> gisFeatures) {
         for(GisFeature feature:gisFeatures) {
-            System.out.println(feature.getSource() + "|" + feature.getTimestamp() + "|" + feature.getDestination() +
-                    "|" + feature.getCreateLat() + "|" + feature.getCreateLon() + "|" +
+            System.out.println(Constants.MSG_DEBUG + TAG + feature.getSource() + "|" + feature.getTimestamp() + "|" +
+                    feature.getDestination() + "|" + feature.getCreateLat() + "|" + feature.getCreateLon() + "|" +
                     feature.getGeometryType() + "|" + feature.getProperties().getFID() + "|" + feature.getProperties().getTEXT());
-            System.out.print("Coordinates : ");
+            System.out.print(Constants.MSG_DEBUG + TAG + "Coordinates : ");
             for (GISCoordinate coordinate:feature.getCoordinates()) {
                 System.out.print(coordinate.getX() + "," + coordinate.getY() + " ; ");
             }
